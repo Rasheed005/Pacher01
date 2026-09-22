@@ -1,0 +1,5 @@
+# S-BERT similarity service dependencies.
+# Note: torch + sentence-transformers are large; if already installed, pip will
+# skip them. Models are loaded from the local Hugging Face cache (no download).
+Flask==3.0.3
+sentence-transformers>=2.2.0

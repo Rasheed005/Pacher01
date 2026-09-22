@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Submit topic · RPATS</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div id="topbar"></div>
+  <div class="container narrow" style="max-width: 640px;">
+    <div class="flex-between">
+      <div>
+        <h1 class="page-title">Project topic</h1>
+        <p class="page-subtitle" id="subtitle">Submit your project title and abstract for approval.</p>
+      </div>
+      <a class="btn secondary small" href="/student/dashboard.html">← Dashboard</a>
+    </div>
+
+    <div class="card">
+      <div id="msg" class="alert hidden"></div>
+      <form id="topic-form" novalidate>
+        <div class="field">
+          <label for="title">Project title</label>
+          <input type="text" id="title" name="title" maxlength="300" required />
+        </div>
+        <div class="field">
+          <label for="abstract">Abstract</label>
+          <textarea id="abstract" name="abstract" rows="6" maxlength="5000" required></textarea>
+          <div class="hint">Describe the problem, approach, and goal. 20–5000 characters.</div>
+        </div>
+        <div class="field">
+          <label for="supervisor">Supervisor</label>
+          <select id="supervisor" name="supervisor" required>
+            <option value="">Loading supervisors…</option>
+          </select>
+        </div>
+
+        <div class="flex-between">
+          <button type="button" id="check-btn" class="btn secondary">Check similarity</button>
+          <button type="submit" id="submit-btn" class="btn">Submit for approval</button>
+        </div>
+      </form>
+
+      <div id="sim-result" class="spacer"></div>
+    </div>
+  </div>
+  <script src="/js/api.js"></script>
+  <script src="/js/common.js"></script>
+  <script src="/js/submit-topic.js"></script>
+</body>
+</html>

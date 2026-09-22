@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create account · RPATS</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="logo">
+        <h1>RPATS</h1>
+        <p>Student registration</p>
+      </div>
+      <div class="card">
+        <h2>Create your student account</h2>
+        <div id="msg" class="alert hidden"></div>
+        <form id="register-form" novalidate>
+          <div class="field">
+            <label for="name">Full name</label>
+            <input type="text" id="name" name="name" autocomplete="name" required />
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" autocomplete="username" required />
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="matricNumber">Matric number</label>
+              <input type="text" id="matricNumber" name="matricNumber" />
+            </div>
+            <div class="field">
+              <label for="department">Department</label>
+              <input type="text" id="department" name="department" />
+            </div>
+          </div>
+          <div class="field">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" autocomplete="new-password" required />
+            <div class="hint">At least 8 characters.</div>
+          </div>
+          <button type="submit" class="btn block">Create account</button>
+        </form>
+      </div>
+      <div class="auth-switch">
+        Already have an account? <a href="/">Sign in</a>
+      </div>
+    </div>
+  </div>
+  <script src="/js/api.js"></script>
+  <script src="/js/common.js"></script>
+  <script src="/js/register.js"></script>
+</body>
+</html>

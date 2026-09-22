@@ -1,0 +1,16 @@
+[sbert] loading model 'all-MiniLM-L6-v2' from local cache ...
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Loading weights:   0%|          | 0/103 [00:00<?, ?it/s]Loading weights: 100%|##########| 103/103 [00:00<00:00, 1577.19it/s]
+[sbert] model ready
+ * Serving Flask app 'app'
+ * Debug mode: off
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on http://127.0.0.1:8000
+Press CTRL+C to quit
+127.0.0.1 - - [08/Sep/2026 13:41:11] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [08/Sep/2026 13:41:12] "POST /similarity HTTP/1.1" 200 -
+127.0.0.1 - - [08/Sep/2026 14:03:18] "POST /similarity HTTP/1.1" 200 -
+127.0.0.1 - - [08/Sep/2026 14:03:20] "POST /similarity HTTP/1.1" 200 -
+127.0.0.1 - - [08/Sep/2026 14:03:20] "POST /similarity HTTP/1.1" 200 -
+127.0.0.1 - - [08/Sep/2026 14:24:21] "POST /similarity HTTP/1.1" 200 -
+127.0.0.1 - - [08/Sep/2026 15:08:16] "GET /health HTTP/1.1" 200 -
