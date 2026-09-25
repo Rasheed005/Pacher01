@@ -2,8 +2,8 @@
 #
 # Deploy: Render Dashboard > New > Blueprint > pick this repo. Render provisions
 # both services and prompts for every `sync: false` value on first creation.
-# NEVER put real secrets in this file — it is committed to git.
-#
+
+
 # The frontend is NOT here: it deploys to Vercel, which reverse-proxies /api/* to
 # the `pacher-api` service below (see frontend/vercel.json and docs/DEPLOYMENT.md).
 services:
