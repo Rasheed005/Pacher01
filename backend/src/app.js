@@ -74,6 +74,11 @@ app.use('/api', csrfProtection, apiRouter);
 // 404 for unknown API routes (must come before the SPA fallback).
 app.use('/api', notFound);
 
+// Liveness probe for the platform health check. Unauthenticated and with no DB
+// dependency, so a transient Atlas blip can't trigger a restart loop. Lives
+// outside /api so the Vercel reverse proxy never forwards it here.
+app.get('/healthz', (req, res) => res.json({ status: 'ok', uptime: process.uptime() }));
+
 // SPA fallback: any non-API GET returns index.html so client-side routing works
 // on deep links / refresh (e.g. /supervisor/project/:id).
 app.get('*', (req, res, next) => {

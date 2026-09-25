@@ -3,6 +3,10 @@
 // Central place for all configuration. Reads from .env (see .env.example).
 require('dotenv').config();
 
+// Public base URL used to build links inside emails and to trust our own origin
+// in the CSRF same-origin check. Trailing slash stripped so comparisons are exact.
+const appUrl = (process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+
 const config = {
   port: parseInt(process.env.PORT || '3000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
@@ -13,7 +17,20 @@ const config = {
   sessionSecret: process.env.SESSION_SECRET || 'change-this-to-a-long-random-secret',
 
   // Public base URL used to build links inside emails (e.g. the verify link).
-  appUrl: (process.env.APP_URL || 'http://localhost:3000').replace(/\/$/, ''),
+  appUrl,
+
+  // Origins trusted by the CSRF same-origin check. Needed when a reverse proxy
+  // (e.g. Vercel) serves the browser and forwards its Origin (our public site),
+  // while this backend sees its own Host (the Render service). The double-submit
+  // token check is still enforced separately — this only widens the Origin gate
+  // to an explicit allowlist of origins we own, never a wildcard.
+  trustedOrigins: [
+    appUrl,
+    ...(process.env.TRUSTED_ORIGINS || '')
+      .split(',')
+      .map((s) => s.trim().replace(/\/$/, ''))
+      .filter(Boolean),
+  ],
 
   // Outgoing email (Nodemailer/SMTP). When SMTP_HOST is unset we run in "console
   // mode": verification links are logged to the server console instead of sent.

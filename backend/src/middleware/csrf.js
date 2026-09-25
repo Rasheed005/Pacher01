@@ -38,11 +38,22 @@ const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);
 function sameOrigin(req) {
   const origin = req.get('origin') || req.get('referer');
   if (!origin) return true; // no header to check (e.g. same-origin GET, curl)
+  let host;
   try {
-    return new URL(origin).host === req.get('host');
+    host = new URL(origin).host;
   } catch {
     return false;
   }
+  if (host === req.get('host')) return true; // same-origin (local dev + all-in-one)
+  // Behind a reverse proxy, the browser Origin is our public site while this
+  // request's Host is the backend. Accept only origins we explicitly own.
+  return config.trustedOrigins.some((o) => {
+    try {
+      return new URL(o).host === host;
+    } catch {
+      return false;
+    }
+  });
 }
 
 function csrfProtection(req, res, next) {

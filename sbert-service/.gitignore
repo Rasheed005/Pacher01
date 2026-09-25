@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Local Hugging Face / sentence-transformers model cache (baked into the image
+# at build time instead — see Dockerfile).
+.cache/
+models/
+*.log

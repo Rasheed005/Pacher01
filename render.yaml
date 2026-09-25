@@ -1,0 +1,69 @@
+# Render Blueprint for Pacher (backend API + S-BERT private service).
+#
+# Deploy: Render Dashboard > New > Blueprint > pick this repo. Render provisions
+# both services and prompts for every `sync: false` value on first creation.
+# NEVER put real secrets in this file — it is committed to git.
+#
+# The frontend is NOT here: it deploys to Vercel, which reverse-proxies /api/* to
+# the `pacher-api` service below (see frontend/vercel.json and docs/DEPLOYMENT.md).
+services:
+  # ---- Express API: the only publicly reachable service ----
+  - type: web
+    name: pacher-api
+    runtime: node
+    plan: starter # 512 MB is plenty for Express; raise if needed
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node src/server.js
+    healthCheckPath: /healthz # dependency-free liveness probe (see src/app.js)
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: "22"
+      # Auto-generated strong secret — never stored in git, never shown to anyone.
+      - key: SESSION_SECRET
+        generateValue: true
+      # Secrets / deployment-specific — Render prompts for these on creation.
+      - key: MONGO_URI
+        sync: false # Atlas SRV connection string
+      - key: APP_URL
+        sync: false # your public Vercel origin, e.g. https://pacher.vercel.app
+      - key: TRUSTED_ORIGINS
+        sync: false # same Vercel origin (CSRF proxy allowlist)
+      - key: SBERT_URL
+        sync: false # S-BERT internal address, e.g. http://pacher-sbert:10000
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false # 587 for STARTTLS, 465 for TLS
+      - key: SMTP_SECURE
+        sync: false # "false" for 587, "true" for 465
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
+        sync: false # e.g. "Pacher <no-reply@yourdomain>"
+      - key: ADMIN_NAME
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false # use a strong password; change after first login
+      # Non-secret tuning (safe to keep in git).
+      - key: SIM_HIGH
+        value: "0.80"
+      - key: SIM_MODERATE
+        value: "0.60"
+
+  # ---- S-BERT similarity: private service, no public port (server-to-server only) ----
+  - type: pserv
+    name: pacher-sbert
+    runtime: docker
+    plan: standard # 2 GB RAM: torch + MiniLM needs ≥1 GB
+    dockerfilePath: ./sbert-service/Dockerfile
+    dockerContext: ./sbert-service
+    envVars:
+      - key: SBERT_MODEL
+        value: all-MiniLM-L6-v2 # must match the model baked in the Dockerfile
