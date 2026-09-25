@@ -2,6 +2,5 @@ node_modules/
 .env
 *.log
 .DS_Store
-_legacy_vanilla/
 docs/
 
