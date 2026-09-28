@@ -22,4 +22,6 @@ yarn-error.log*
 Thumbs.db
 sbert.log
 docs/ 
+smoke_batch2.cjs
+
 
