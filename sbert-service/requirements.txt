@@ -5,7 +5,7 @@
 # sentence-transformers implementation. fastembed pulls in onnxruntime + the
 # tokenizer; no torch, no sentence-transformers.
 Flask==3.0
-fastembed>
+fastembed
 numpy
 # Production WSGI server (used in the container / on the host; the Flask dev
 # server is only used for local `python app.py`).
