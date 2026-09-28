@@ -4,9 +4,9 @@
 # Same all-MiniLM-L6-v2 model, so scores are equivalent to the previous
 # sentence-transformers implementation. fastembed pulls in onnxruntime + the
 # tokenizer; no torch, no sentence-transformers.
-Flask==3.0.3
-fastembed>=0.3.6
-numpy>=1.26,<2.0
+Flask==3.0
+fastembed>
+numpy
 # Production WSGI server (used in the container / on the host; the Flask dev
 # server is only used for local `python app.py`).
 gunicorn>=21.2.0
