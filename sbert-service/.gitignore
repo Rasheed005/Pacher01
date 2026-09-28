@@ -1,0 +1,10 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Local model caches (fetched at build/startup, never committed).
+.cache/
+.fastembed_cache/
+models/
+*.log
