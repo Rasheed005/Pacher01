@@ -142,8 +142,7 @@ export default function AdminDashboard() {
       <div className="card">
         <h2>Invite a supervisor</h2>
         <p className="muted">
-          Supervisors join by invitation. They receive an email link to set their own password —
-          no account exists until they accept.
+          Supervisors join by invitation. They receive an email link to set their own password.
         </p>
         <form onSubmit={sendInvite}>
           <div className="row">

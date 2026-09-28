@@ -77,10 +77,10 @@ export function AnnouncementForm({ onPosted, scopeLabel }) {
   return (
     <form onSubmit={submit}>
       <Alert>{error}</Alert>
-      <div className="field">
+      {/* <div className="field">
         <label>Title</label>
-        <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} maxLength={140} required />
-      </div>
+        <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} maxLength={140} />
+      </div> */}
       <div className="field">
         <label>Message</label>
         <textarea

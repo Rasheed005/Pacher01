@@ -1,17 +1,26 @@
-# Render Blueprint for Pacher (backend API + S-BERT private service).
+# Render Blueprint for Pacher: the Express backend API + the S-BERT service,
+# both on Render's FREE Web Service plan.
 #
-# Deploy: Render Dashboard > New > Blueprint > pick this repo. Render provisions
-# both services and prompts for every `sync: false` value on first creation.
-
-
-# The frontend is NOT here: it deploys to Vercel, which reverse-proxies /api/* to
-# the `pacher-api` service below (see frontend/vercel.json and docs/DEPLOYMENT.md).
+# Free-tier note: Render's free plan offers Web Services but NOT Private Services,
+# so the S-BERT service is a second (public) Web Service, reachable only with the
+# shared SBERT_KEY secret — the backend calls it server-to-server; the browser
+# never does. The frontend deploys to Vercel, which reverse-proxies /api/* to the
+# backend service. See docs/DEPLOYMENT.md for the full runbook.
+#
+# Using this Blueprint is OPTIONAL. It provisions only free Web Services (no paid
+# plans), so it should not trigger Render's payment-method wall; if it ever does,
+# create the same two free Web Services by hand instead (Dashboard > New > Web
+# Service) — docs/DEPLOYMENT.md covers that path. Render prompts for every
+# `sync: false` value on first creation.
+#
+# NOTE: two always-on free services would exceed the 750 free instance-hours/month,
+# but both sleep after 15 min idle, so light real-world traffic stays well under it.
 services:
-  # ---- Express API: the only publicly reachable service ----
+  # ---- Express API: the publicly reachable backend service ----
   - type: web
     name: pacher-api
     runtime: node
-    plan: starter # 512 MB is plenty for Express; raise if needed
+    plan: free # free web service: sleeps after 15 min idle, ~1 min cold start
     rootDir: backend
     buildCommand: npm install
     startCommand: node src/server.js
@@ -26,13 +35,15 @@ services:
         generateValue: true
       # Secrets / deployment-specific — Render prompts for these on creation.
       - key: MONGO_URI
-        sync: false # Atlas SRV connection string
+        sync: false # Atlas SRV connection string (with the scoped app DB user)
       - key: APP_URL
         sync: false # your public Vercel origin, e.g. https://pacher.vercel.app
       - key: TRUSTED_ORIGINS
         sync: false # same Vercel origin (CSRF proxy allowlist)
       - key: SBERT_URL
-        sync: false # S-BERT internal address, e.g. http://pacher-sbert:10000
+        sync: false # the S-BERT web service URL, e.g. https://pacher-sbert.onrender.com
+      - key: SBERT_KEY
+        sync: false # shared secret; must match SBERT_KEY on the pacher-sbert service
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT
@@ -57,13 +68,19 @@ services:
       - key: SIM_MODERATE
         value: "0.60"
 
-  # ---- S-BERT similarity: private service, no public port (server-to-server only) ----
-  - type: pserv
+  # ---- S-BERT similarity: public, but every /similarity call needs SBERT_KEY ----
+  - type: web
     name: pacher-sbert
-    runtime: docker
-    plan: standard # 2 GB RAM: torch + MiniLM needs ≥1 GB
-    dockerfilePath: ./sbert-service/Dockerfile
-    dockerContext: ./sbert-service
+    runtime: python
+    plan: free # free web service: sleeps after 15 min idle, ~1 min cold start
+    rootDir: sbert-service
+    # Pre-fetch the ONNX model at build so the first request is fast (cached in
+    # .fastembed_cache, the same dir app.py reads at runtime).
+    buildCommand: "pip install -r requirements.txt && python -c \"from fastembed import TextEmbedding; TextEmbedding(model_name='sentence-transformers/all-MiniLM-L6-v2', cache_dir='.fastembed_cache')\""
+    startCommand: "gunicorn -b 0.0.0.0:$PORT app:app --workers 1 --threads 4 --timeout 120 --preload"
+    healthCheckPath: /health # open liveness probe (see app.py)
     envVars:
       - key: SBERT_MODEL
-        value: all-MiniLM-L6-v2 # must match the model baked in the Dockerfile
+        value: all-MiniLM-L6-v2 # reported by /health; embeds all-MiniLM-L6-v2 (ONNX)
+      - key: SBERT_KEY
+        sync: false # shared secret; must match SBERT_KEY on the pacher-api service

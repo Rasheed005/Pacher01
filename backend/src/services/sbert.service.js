@@ -17,6 +17,13 @@ async function withTimeout(fn) {
   }
 }
 
+// Shared-secret header presented to S-BERT when SBERT_KEY is configured (needed
+// when S-BERT runs on a public host such as a Hugging Face Space). Empty in local
+// dev / private networking, so behaviour there is unchanged.
+function authHeaders() {
+  return config.sbert.key ? { 'X-SBERT-Key': config.sbert.key } : {};
+}
+
 // Compare `text` against candidates [{id, title, text}].
 // Returns { status:'ok'|'unavailable', topScore, matches:[{id,title,score}] }.
 async function checkSimilarity(text, candidates) {
@@ -24,7 +31,7 @@ async function checkSimilarity(text, candidates) {
     return await withTimeout(async (signal) => {
       const res = await fetch(`${config.sbert.url}/similarity`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...authHeaders() },
         body: JSON.stringify({ text, candidates }),
         signal,
       });
@@ -42,7 +49,7 @@ async function checkSimilarity(text, candidates) {
 async function health() {
   try {
     return await withTimeout(async (signal) => {
-      const res = await fetch(`${config.sbert.url}/health`, { signal });
+      const res = await fetch(`${config.sbert.url}/health`, { headers: authHeaders(), signal });
       if (!res.ok) throw new Error(`status ${res.status}`);
       const data = await res.json();
       return { status: 'ok', model: data.model };

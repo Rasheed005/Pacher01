@@ -46,6 +46,10 @@ const config = {
   sbert: {
     url: process.env.SBERT_URL || 'http://127.0.0.1:8000',
     timeoutMs: parseInt(process.env.SBERT_TIMEOUT_MS || '4000', 10),
+    // Shared secret presented to S-BERT when it runs on a public host (e.g. a
+    // Hugging Face Space). Sent as the 'X-SBERT-Key' header. Leave unset for
+    // local dev / a privately-networked S-BERT.
+    key: process.env.SBERT_KEY || '',
   },
 
   // Cosine-similarity thresholds used to build the student's warning band.

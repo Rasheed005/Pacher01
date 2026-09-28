@@ -1,8 +1,12 @@
 # S-BERT similarity service dependencies.
-# Note: torch + sentence-transformers are large; if already installed, pip will
-# skip them. Models are loaded from the local Hugging Face cache (no download).
+# Embeddings run on a lightweight ONNX runtime (fastembed) instead of PyTorch,
+# so the service fits in a free ~512 MB host (e.g. a Render free web service).
+# Same all-MiniLM-L6-v2 model, so scores are equivalent to the previous
+# sentence-transformers implementation. fastembed pulls in onnxruntime + the
+# tokenizer; no torch, no sentence-transformers.
 Flask==3.0.3
-sentence-transformers>=2.2.0
-# Production WSGI server (used by the Docker image; the Flask dev server is
-# only used for local `python app.py`).
+fastembed>=0.3.6
+numpy>=1.26,<2.0
+# Production WSGI server (used in the container / on the host; the Flask dev
+# server is only used for local `python app.py`).
 gunicorn>=21.2.0

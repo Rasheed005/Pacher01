@@ -1,24 +1,29 @@
-# Production image for the standalone S-BERT similarity service.
-# The model is baked into the image at build time so the container starts fully
-# offline and fast (matches app.py's "load from local cache" assumption).
+# Image for the standalone S-BERT similarity service (lightweight ONNX / fastembed,
+# no PyTorch). Not required on Render's native Python runtime — kept so the service
+# also runs with a plain `docker run` and stays portable. The ONNX model is fetched
+# at build time so the container starts offline and fast.
 FROM python:3.11-slim
 
-# Small, stable layer for deps first (better build caching).
-WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Run as a non-root user; keep the model cache under its writable HOME.
+RUN useradd -m -u 1000 user
+USER user
+ENV HOME=/home/user \
+    PATH=/home/user/.local/bin:$PATH \
+    FASTEMBED_CACHE=/home/user/app/.fastembed_cache
+WORKDIR /home/user/app
 
-# Bake the sentence-transformers model into the image cache at build time.
-# SBERT_MODEL defaults to all-MiniLM-L6-v2; keep this in sync with the runtime env.
-ARG SBERT_MODEL=all-MiniLM-L6-v2
-ENV SBERT_MODEL=${SBERT_MODEL}
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('${SBERT_MODEL}')"
+# Small, stable deps layer first (better build caching).
+COPY --chown=user requirements.txt .
+RUN pip install --no-cache-dir --user -r requirements.txt
 
-COPY . .
+COPY --chown=user . .
 
-# Render (and most PaaS) inject $PORT; default to 8000 for local `docker run`.
-# --preload loads the model once in the master before forking workers.
-# One worker keeps the ~1-2GB model in a single copy; threads handle the
-# low-volume, server-to-server call pattern.
+# Bake the ONNX model into the cache at build time (same dir app.py reads), so
+# the container starts offline and the first request is fast.
+ARG SBERT_MODEL=sentence-transformers/all-MiniLM-L6-v2
+RUN python -c "import os; from fastembed import TextEmbedding; TextEmbedding(model_name='${SBERT_MODEL}', cache_dir=os.environ['FASTEMBED_CACHE'])"
+
+# The host injects PORT (Render) or defaults to 8000 for a local `docker run`.
+# One worker keeps a single copy of the (small) ONNX model in memory.
 ENV SBERT_HOST=0.0.0.0
 CMD ["sh", "-c", "gunicorn -b 0.0.0.0:${PORT:-8000} app:app --workers 1 --threads 4 --timeout 120 --preload"]

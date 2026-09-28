@@ -76,7 +76,10 @@ router.post(
   [
     ...topicValidators,
     body('supervisorId').isMongoId().withMessage('Please choose a supervisor'),
-    body('checkToken').optional().isString().isLength({ max: 128 }),
+    // Accept an absent token as either undefined or null: when S-BERT is
+    // unavailable the similarity-check issues no token, so the client legitimately
+    // submits checkToken: null. The real gate is checkToken.verify() below.
+    body('checkToken').optional({ values: 'null' }).isString().isLength({ max: 128 }),
   ],
   handleValidation,
   asyncHandler(async (req, res) => {

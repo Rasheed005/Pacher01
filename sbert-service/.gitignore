@@ -3,8 +3,8 @@ __pycache__/
 *.pyc
 *.pyo
 
-# Local Hugging Face / sentence-transformers model cache (baked into the image
-# at build time instead — see Dockerfile).
+# Local model caches (fetched at build/startup, never committed).
 .cache/
+.fastembed_cache/
 models/
 *.log

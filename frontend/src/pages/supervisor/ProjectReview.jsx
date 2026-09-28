@@ -68,7 +68,7 @@ export default function ProjectReview() {
 
       {/* Topic review */}
       <div className="card">
-        <div className="flex-between"><h2>Topic</h2><Badge status={project.topic.status} /></div>
+        <div className="flex-between"><h2>Abstract</h2><Badge status={project.topic.status} /></div>
         <p style={{ whiteSpace: 'pre-wrap' }}>{project.abstract}</p>
         {project.similarity && <SimBand sim={project.similarity} />}
         {project.similarity?.matches?.length > 0 && (

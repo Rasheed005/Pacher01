@@ -1,5 +1,4 @@
-// Pacher brand mark: a "P" monogram in a rounded indigo badge with an approval
-// check — the letter is the name, the check nods to "approval & tracking".
+// Pacher brand mark: a "P" monogram in a rounded indigo badge with an approval sign
 // Inline SVG so it inherits crisp rendering at any size and needs no extra
 // request (works under the strict CSP). `size` sets both width and height.
 export default function Logo({ size = 28, className }) {
