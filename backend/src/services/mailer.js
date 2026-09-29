@@ -21,6 +21,13 @@ function getTransporter() {
       port: config.mail.port,
       secure: config.mail.secure,
       auth: config.mail.user ? { user: config.mail.user, pass: config.mail.pass } : undefined,
+      // Availability: cap a stalled SMTP connection so a black-holed outbound port
+      // (common on free PaaS like Render) fails fast instead of hanging the request
+      // until the upstream proxy 504s. deliver()'s catch then logs the link and the
+      // registration/reset request still completes, honouring the contract above.
+      connectionTimeout: 10000, // 10s to establish the TCP/TLS connection
+      greetingTimeout: 10000, // 10s to receive the SMTP greeting
+      socketTimeout: 15000, // 15s of socket inactivity before giving up
     });
   }
   return transporter;
@@ -65,13 +72,67 @@ async function sendPasswordResetEmail(user, link) {
   return deliver(user.email, subject, text, link);
 }
 
-// Shared delivery path: send via SMTP when configured, otherwise print to the
-// console. Never throws — a mail failure must not break the primary request.
+// Parse a MAIL_FROM value ("Pacher <no-reply@x.com>" or "no-reply@x.com") into
+// Brevo's { name, email } sender shape. The email must be a *verified* sender in
+// your Brevo account, or the API rejects the send with 400.
+function parseFrom(from) {
+  const m = /^\s*(.*?)\s*<([^>]+)>\s*$/.exec(from || '');
+  if (m) {
+    const name = m[1].trim();
+    return name ? { name, email: m[2].trim() } : { email: m[2].trim() };
+  }
+  return { email: (from || '').trim() };
+}
+
+// Send one transactional email via the Brevo HTTP API (HTTPS, port 443). Preferred
+// over SMTP because free PaaS hosts (e.g. Render) commonly block outbound SMTP
+// ports, which would otherwise hang the request. Throws on any non-2xx so the
+// caller falls back to logging the link.
+async function sendViaBrevo(to, subject, text) {
+  const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'api-key': config.mail.brevoApiKey,
+    },
+    body: JSON.stringify({
+      sender: parseFrom(config.mail.from),
+      to: [{ email: to }],
+      subject,
+      textContent: text,
+    }),
+    // Availability: bound the call so a slow/unreachable API can't hang the request.
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => '');
+    throw new Error(`Brevo API ${res.status}: ${body.slice(0, 200)}`);
+  }
+}
+
+// Shared delivery path. Order of preference:
+//   1. Brevo HTTP API (port 443) — works even where the host blocks outbound SMTP.
+//   2. SMTP transport — when SMTP_* is configured.
+//   3. Console mode — neither configured; log the link so the flow still works.
+// Never throws — a mail failure must not break the primary request.
 async function deliver(to, subject, text, link) {
+  if (config.mail.brevoApiKey) {
+    try {
+      await sendViaBrevo(to, subject, text);
+      return true;
+    } catch (err) {
+      // Availability: never let a mail failure break the request. Log the link so
+      // the action can still be completed manually.
+      console.error('[mailer] Brevo API send failed:', err.message);
+      console.error(`[mailer] link for ${to}: ${link}`);
+      return false;
+    }
+  }
+
   const tx = getTransporter();
   if (!tx) {
-    // Console mode — no SMTP configured.
-    console.log('\n[mailer] (console mode — SMTP not configured)');
+    // Console mode — no email provider configured.
+    console.log('\n[mailer] (console mode — no email provider configured)');
     console.log(`[mailer] To: ${to}`);
     console.log(`[mailer] Subject: ${subject}`);
     console.log(`[mailer] Link: ${link}\n`);

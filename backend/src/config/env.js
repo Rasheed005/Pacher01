@@ -41,6 +41,10 @@ const config = {
     user: process.env.SMTP_USER || '',
     pass: process.env.SMTP_PASS || '',
     from: process.env.MAIL_FROM || 'Pacher <no-reply@pacher.local>',
+    // Brevo transactional-email HTTP API key (xkeysib-…). When set, mail is sent
+    // via Brevo over HTTPS (port 443) in preference to SMTP — required on hosts
+    // that block outbound SMTP (e.g. Render free). Secret: set in env, never in git.
+    brevoApiKey: process.env.BREVO_API_KEY || '',
   },
 
   sbert: {
