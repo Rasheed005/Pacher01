@@ -1,5 +1,4 @@
-// Thin fetch wrapper for the Pacher API — same behavior as the original vanilla
-// client, now importable as an ES module.
+
 //  - Same-origin credentials (session cookie) are always sent.
 //  - The readable XSRF-TOKEN cookie is echoed as X-CSRF-Token on state-changing
 //    requests, satisfying the server's double-submit CSRF check.

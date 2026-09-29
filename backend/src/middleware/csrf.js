@@ -57,7 +57,15 @@ function sameOrigin(req) {
 }
 
 function csrfProtection(req, res, next) {
-  if (SAFE_METHODS.has(req.method)) return next();
+  if (SAFE_METHODS.has(req.method)) return next(); 
+
+  console.log('[csrf-debug]', {
+  method: req.method,
+  path: req.path,
+  sessionId: req.sessionID,
+  sessionCsrf: req.session.csrfToken,
+  headerCsrf: req.get('x-csrf-token'),
+});
 
   if (!sameOrigin(req)) {
     return res.status(403).json({ error: 'Cross-origin request blocked' });
